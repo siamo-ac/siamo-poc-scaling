@@ -1,0 +1,38 @@
+# Illustrative docker-compose for horizontal scale-out.
+#
+# IMPORTANT: the images below are PLACEHOLDERS — they need to be built
+# first (e.g. `docker build -t siamo-poc-scaling-backend -f Dockerfile.backend .`).
+# No Dockerfiles ship with this POC; the compose file is here to show the
+# *shape* of scaling out (add a service, the balancer sees it), not to run
+# as-is. The real runnable demo is scripts/demo.sh.
+#
+# Concept: 3 identical backend replicas do the work; one balancer spreads
+# requests across them. Need more capacity? Add backend-4 and it joins the
+# rotation — no config change on the balancer logic itself.
+
+services:
+  balancer:
+    image: siamo-poc-scaling-balancer:latest # placeholder — build me
+    ports:
+      - "18080:18080"
+    command:
+      - "-addr"
+      - ":18080"
+      - "-backends"
+      - "http://backend-1:9001,http://backend-2:9001,http://backend-3:9001"
+    depends_on:
+      - backend-1
+      - backend-2
+      - backend-3
+
+  backend-1:
+    image: siamo-poc-scaling-backend:latest # placeholder — build me
+    command: ["-addr", ":9001", "-id", "backend-1"]
+
+  backend-2:
+    image: siamo-poc-scaling-backend:latest # placeholder — build me
+    command: ["-addr", ":9001", "-id", "backend-2"]
+
+  backend-3:
+    image: siamo-poc-scaling-backend:latest # placeholder — build me
+    command: ["-addr", ":9001", "-id", "backend-3"]
